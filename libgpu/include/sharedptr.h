@@ -253,6 +253,17 @@ public:
     CUDA_SAFE_CALL(
         cudaMemcpy(ptr, cpu_ptr, nuseb * sizeof(T), cudaMemcpyHostToDevice));
   }
+  
+  void copy_to_gpu_async(T* cpu_ptr, cudaStream_t stream) { copy_to_gpu_async(cpu_ptr, nmemb, stream); }
+
+  void copy_to_gpu_async(T* cpu_ptr, size_t nuseb, cudaStream_t stream) {
+    if (cpu_ptr == NULL)
+      return;
+    assert(ptr != NULL);
+    assert(nuseb <= nmemb);
+    CUDA_SAFE_CALL(
+	cudaMemcpyAsync(ptr, cpu_ptr, nuseb * sizeof(T), cudaMemcpyHostToDevice, stream));
+  }
 
   void copy_to_cpu(T* cpu_ptr) { copy_to_cpu(cpu_ptr, nmemb); }
 
@@ -263,6 +274,17 @@ public:
     assert(nuseb <= nmemb);
     CUDA_SAFE_CALL(
         cudaMemcpy(cpu_ptr, ptr, nuseb * sizeof(T), cudaMemcpyDeviceToHost));
+  }
+  
+  void copy_to_cpu_async(T* cpu_ptr, cudaStream_t stream) { copy_to_cpu_async(cpu_ptr, nmemb, stream); }
+
+  void copy_to_cpu_async(T* cpu_ptr, size_t nuseb, cudaStream_t stream) {
+    if (ptr == NULL)
+      return;
+    assert(cpu_ptr != NULL);
+    assert(nuseb <= nmemb);
+    CUDA_SAFE_CALL(
+       cudaMemcpyAsync(cpu_ptr, ptr, nuseb * sizeof(T), cudaMemcpyDeviceToHost, stream));
   }
 
   __device__ __host__ T* device_ptr() {

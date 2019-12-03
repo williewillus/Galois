@@ -76,6 +76,19 @@ void CSRGraphTex::copy_to_gpu(struct CSRGraphTex &copygraph) {
   check_cuda(cudaMemcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyHostToDevice));
 }
 
+void CSRGraphTex::copy_to_gpu_async(struct CSRGraphTex &copygraph, cudaStream_t stream) {
+  copygraph.nnodes = nnodes;
+  copygraph.nedges = nedges;
+  
+  assert(copygraph.allocOnDevice(edge_data == NULL));
+
+  check_cuda(cudaMemcpyAsync(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type), cudaMemcpyHostToDevice));
+  if (edge_data != NULL) check_cuda(cudaMemcpyAsync(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type), cudaMemcpyHostToDevice, stream));
+  check_cuda(cudaMemcpyAsync(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyHostToDevice, stream));
+
+  check_cuda(cudaMemcpyAsync(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyHostToDevice, stream));
+}
+
 unsigned CSRGraphTex::allocOnDevice(bool no_edge_data) {
   if(CSRGraph::allocOnDevice(no_edge_data)) 
     {
@@ -273,6 +286,20 @@ void CSRGraph::copy_to_cpu(struct CSRGraph &copygraph) {
   check_cuda(cudaMemcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyDeviceToHost));
 
   check_cuda(cudaMemcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyDeviceToHost));
+}
+
+void CSRGraph::copy_to_cpu_async(struct CSRGraph &copygraph, cudaStream_t stream) {
+  assert(device_graph);
+  
+  // cpu graph is not allocated
+  assert(copygraph.nnodes = nnodes);
+  assert(copygraph.nedges = nedges);
+  
+  check_cuda(cudaMemcpyAsync(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type), cudaMemcpyDeviceToHost, stream));
+  if (edge_data != NULL) check_cuda(cudaMemcpyAsync(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type), cudaMemcpyDeviceToHost, stream));
+  check_cuda(cudaMemcpyAsync(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyDeviceToHost, stream));
+
+  check_cuda(cudaMemcpyAsync(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyDeviceToHost, stream));
 }
 
 struct EdgeIterator {

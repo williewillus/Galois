@@ -28,6 +28,8 @@ struct CSRGraph {
   unsigned read(char file[], bool read_edge_data = true);
   void copy_to_gpu(struct CSRGraph& copygraph);
   void copy_to_cpu(struct CSRGraph& copygraph);
+  void copy_to_gpu_async(struct CSRGraph& copygraph, cudaStream_t stream);
+  void copy_to_cpu_async(struct CSRGraph& copygraph, cudaStream_t stream);
 
   CSRGraph();
 
@@ -106,6 +108,7 @@ struct CSRGraphTex : CSRGraph {
   cudaTextureObject_t node_data_tx;
 
   void copy_to_gpu(struct CSRGraphTex& copygraph);
+  void copy_to_gpu_async(struct CSRGraphTex& copygraph, cudaStream_t stream);
   unsigned allocOnDevice(bool no_edge_data = false);
 
   __device__ __host__ index_type getOutDegree(unsigned src) {

@@ -82,6 +82,9 @@ bool init_CUDA_context_common_edges(struct CUDA_Context_Common_Edges* ctx, int d
 
 void load_graph_CUDA_common_edges(struct CUDA_Context_Common_Edges* ctx, EdgeMarshalGraph& g,
                             unsigned num_hosts, bool LoadProxyEdges = true) {
+  cudaStream_t stream;
+  check_cuda(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+
   CSRGraphTy graph;
   ctx->numOwned          = g.numOwned;
   ctx->beginMaster       = g.beginMaster;
@@ -101,7 +104,7 @@ void load_graph_CUDA_common_edges(struct CUDA_Context_Common_Edges* ctx, EdgeMar
   graph.edge_dst  = g.edge_dst;
   graph.node_data = g.node_data;
   graph.edge_data = g.edge_data;
-  graph.copy_to_gpu(ctx->gg);
+  graph.copy_to_gpu_async(ctx->gg, stream);
 
   if(LoadProxyEdges) {
      size_t max_shared_size = 0; // for union across master/mirror of all hosts
@@ -114,8 +117,8 @@ void load_graph_CUDA_common_edges(struct CUDA_Context_Common_Edges* ctx, EdgeMar
     for (uint32_t h = 0; h < num_hosts; ++h) {
     if (ctx->master.num_edges[h] > 0) {
       ctx->master.edges[h].alloc(ctx->master.num_edges[h]);
-      ctx->master.edges[h].copy_to_gpu(g.master_edges[h],
-                       ctx->master.num_edges[h]);
+      ctx->master.edges[h].copy_to_gpu_async(g.master_edges[h],
+					     ctx->master.num_edges[h], stream);
     }
     if (ctx->master.num_edges[h] > max_shared_size) {
       max_shared_size = ctx->master.num_edges[h];
@@ -130,8 +133,8 @@ void load_graph_CUDA_common_edges(struct CUDA_Context_Common_Edges* ctx, EdgeMar
     for (uint32_t h = 0; h < num_hosts; ++h) {
     if (ctx->mirror.num_edges[h] > 0) {
       ctx->mirror.edges[h].alloc(ctx->mirror.num_edges[h]);
-      ctx->mirror.edges[h].copy_to_gpu(g.mirror_edges[h],
-                       ctx->mirror.num_edges[h]);
+      ctx->mirror.edges[h].copy_to_gpu_async(g.mirror_edges[h],
+					     ctx->mirror.num_edges[h], stream);
     }
     if (ctx->mirror.num_edges[h] > max_shared_size) {
       max_shared_size = ctx->mirror.num_edges[h];
@@ -144,6 +147,8 @@ void load_graph_CUDA_common_edges(struct CUDA_Context_Common_Edges* ctx, EdgeMar
   // printf("[%u] load_graph_GPU: %u owned nodes of total %u resident, %lu
   // edges\n", ctx->id, ctx->nowned, graph.nnodes, graph.nedges);
 
+  check_cuda(cudaStreamSynchronize(stream));
+  check_cuda(cudaStreamDestroy(stream));
 }
 
 size_t mem_usage_CUDA_common_edges(EdgeMarshalGraph& g, unsigned num_hosts) {

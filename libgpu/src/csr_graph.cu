@@ -274,6 +274,19 @@ void CSRGraph::copy_to_gpu(struct CSRGraph &copygraph) {
   check_cuda(cudaMemcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyHostToDevice));
 }
 
+void CSRGraph::copy_to_gpu_async(struct CSRGraph &copygraph, cudaStream_t stream) {
+  copygraph.nnodes = nnodes;
+  copygraph.nedges = nedges;
+  
+  assert(copygraph.allocOnDevice(edge_data == NULL));
+
+  check_cuda(cudaMemcpyAsync(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type), cudaMemcpyHostToDevice, stream));
+  if (edge_data != NULL) check_cuda(cudaMemcpyAsync(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type), cudaMemcpyHostToDevice, stream));
+  check_cuda(cudaMemcpyAsync(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyHostToDevice, stream));
+
+  check_cuda(cudaMemcpyAsync(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyHostToDevice, stream));
+}
+
 void CSRGraph::copy_to_cpu(struct CSRGraph &copygraph) {
   assert(device_graph);
   

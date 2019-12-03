@@ -133,7 +133,7 @@ public:
     assert(device >= 1);
 
     if (ptrs[device] == NULL)
-      CUDA_SAFE_CALL(cudaMalloc(&ptrs[device], nmemb * sizeof(T)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&ptrs[device], nmemb * sizeof(T)));
 
     if (!owner[device]) {
       int o;
@@ -150,7 +150,7 @@ public:
     assert(device >= 1);
 
     if (ptrs[device] == NULL) {
-      CUDA_SAFE_CALL(cudaMalloc(&ptrs[device], nmemb * sizeof(T)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&ptrs[device], nmemb * sizeof(T)));
     }
 
     if (!owner[device]) {

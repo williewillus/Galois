@@ -91,9 +91,9 @@ unsigned ComponentSpace::numberOfComponentsHost() {
   return hncomponents;
 }
 void ComponentSpace::allocate() {
-  check_cuda(cudaMalloc((void**)&ncomponents, 1 * sizeof(unsigned)));
-  check_cuda(cudaMalloc((void**)&complen, nelements * sizeof(unsigned)));
-  check_cuda(cudaMalloc((void**)&ele2comp, nelements * sizeof(unsigned)));
+  check_cuda(cudaMallocManaged((void**)&ncomponents, 1 * sizeof(unsigned)));
+  check_cuda(cudaMallocManaged((void**)&complen, nelements * sizeof(unsigned)));
+  check_cuda(cudaMallocManaged((void**)&ele2comp, nelements * sizeof(unsigned)));
 }
 __global__ void dinitcs(unsigned nelements, unsigned* complen,
                         unsigned* ele2comp) {

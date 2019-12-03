@@ -185,7 +185,7 @@ public:
 
 				sync_bytes = new_sync_bytes;
 
-				CUDA_SAFE_CALL(cudaMalloc((void**) &d_sync, sync_bytes));
+				CUDA_SAFE_CALL(cudaMallocManaged((void**) &d_sync, sync_bytes));
 				retval = cudaSuccess;
 
 				// Initialize to zero

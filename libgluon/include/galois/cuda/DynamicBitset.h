@@ -62,7 +62,11 @@ public:
     assert(sizeof(uint64_t) * 8 == 64);
     num_bits_capacity = nbits;
     num_bits          = nbits;
-    CUDA_SAFE_CALL(cudaMalloc(&bit_vector, vec_size() * sizeof(uint64_t)));
+    if(vec_size() != 0) {
+        CUDA_SAFE_CALL(cudaMallocManaged((void**)&bit_vector, vec_size() * sizeof(uint64_t)));
+    } else {
+        CUDA_SAFE_CALL(cudaMalloc((void**)&bit_vector, vec_size() * sizeof(uint64_t)));
+    }
     reset();
   }
 

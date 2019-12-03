@@ -75,15 +75,15 @@ struct Worklist {
       dwl = NULL;
     } else {
       wl = (int*)calloc(nsize, sizeof(int));
-      CUDA_SAFE_CALL(cudaMalloc(&dwl, nsize * sizeof(int)));
-      CUDA_SAFE_CALL(cudaMalloc(&dnsize, 1 * sizeof(int)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&dwl, nsize * sizeof(int)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&dnsize, 1 * sizeof(int)));
 #ifdef SLOTS
-      CUDA_SAFE_CALL(cudaMalloc(&dcounters, 2 * sizeof(int)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&dcounters, 2 * sizeof(int)));
       dindex = &dcounters[currslot];
 #else
-      CUDA_SAFE_CALL(cudaMalloc(&dindex, 1 * sizeof(int)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&dindex, 1 * sizeof(int)));
 #endif
-      // CUDA_SAFE_CALL(cudaMalloc(&dindex, 2 * sizeof(int)));
+      // CUDA_SAFE_CALL(cudaMallocManaged(&dindex, 2 * sizeof(int)));
 
       init_wl<<<1, 1>>>(nsize, dnsize, dindex);
 
@@ -92,19 +92,19 @@ struct Worklist {
       // &zero, 1 * sizeof(zero), cudaMemcpyHostToDevice));
 
 #ifdef COUNT_ATOMICS
-      CUDA_SAFE_CALL(cudaMalloc(&atomic_counter, sizeof(int) * 1));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&atomic_counter, sizeof(int) * 1));
       CUDA_SAFE_CALL(cudaMemcpy((void*)atomic_counter, &zero, 1 * sizeof(zero),
                                 cudaMemcpyHostToDevice));
 #endif
 
 #ifdef ATOMIC_DENSITY
       CUDA_SAFE_CALL(
-          cudaMalloc(&atomic_density, sizeof(unsigned int) * (32 + 1)));
+          cudaMallocManaged((void**)&atomic_density, sizeof(unsigned int) * (32 + 1)));
       CUDA_SAFE_CALL(
           cudaMemset(atomic_density, 0, sizeof(unsigned int) * (32 + 1)));
 #endif
 
-      // CUDA_SAFE_CALL(cudaMalloc(&rcounter, 1 * sizeof(int)));
+      // CUDA_SAFE_CALL(cudaMallocManaged(&rcounter, 1 * sizeof(int)));
       // CUDA_SAFE_CALL(cudaMemcpy((void *) rcounter, &zero, 1 * sizeof(zero),
       // cudaMemcpyHostToDevice));
 

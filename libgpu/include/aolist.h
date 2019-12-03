@@ -35,7 +35,7 @@ struct AppendOnlyList {
     } else {
       list.alloc(nsize);
       dl = list.gpu_wr_ptr();
-      CUDA_SAFE_CALL(cudaMalloc(&dindex, 1 * sizeof(int)));
+      CUDA_SAFE_CALL(cudaMallocManaged((void**)&dindex, 1 * sizeof(int)));
       CUDA_SAFE_CALL(cudaMemcpy((void*)dindex, &zero, 1 * sizeof(zero),
                                 cudaMemcpyHostToDevice));
       index = 0;

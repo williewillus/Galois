@@ -421,7 +421,7 @@ void get_offsets_from_bitset(index_type bitset_size,
                              num_set_bits_ptr.gpu_wr_ptr(true), bitset_size);
   check_cuda_kernel;
   CubDebugExit(g_allocator.DeviceAllocate(&d_temp_storage, temp_storage_bytes));
-  //CUDA_SAFE_CALL(cudaMalloc(&d_temp_storage, temp_storage_bytes));
+  //CUDA_SAFE_CALL(cudaMallocManaged(&d_temp_storage, temp_storage_bytes));
   cub::DeviceSelect::Flagged(d_temp_storage, temp_storage_bytes,
                              offset_iterator, flag_iterator, offsets,
                              num_set_bits_ptr.gpu_wr_ptr(true), bitset_size);

@@ -69,7 +69,7 @@ struct PipeContextT {
 
   __device__ __host__ inline void retry2() { swap(re, in); }
 
-  __host__ void prep() { check_cuda(cudaMalloc(&ois, sizeof(struct oi_save))); }
+  __host__ void prep() { check_cuda(cudaMallocManaged((void**)&ois, sizeof(struct oi_save))); }
 
   __device__ void save() {
     ois->in  = in;
@@ -167,7 +167,7 @@ struct PipeContextLight {
   /* } */
 
   /* __host__ void prep() { */
-  /*   check_cuda(cudaMalloc(&ois, sizeof(struct oi_save))); */
+  /*   check_cuda(cudaMallocManaged(&ois, sizeof(struct oi_save))); */
   /* } */
 
   template <typename T>

@@ -81,6 +81,9 @@ bool init_CUDA_context_common(struct CUDA_Context_Common* ctx, int device) {
 
 void load_graph_CUDA_common(struct CUDA_Context_Common* ctx, MarshalGraph& g,
                             unsigned num_hosts) {
+  cudaStream_t stream;
+  check_cuda(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking));
+
   CSRGraphTy graph;
   ctx->numOwned          = g.numOwned;
   ctx->beginMaster       = g.beginMaster;
@@ -100,7 +103,7 @@ void load_graph_CUDA_common(struct CUDA_Context_Common* ctx, MarshalGraph& g,
   graph.edge_dst  = g.edge_dst;
   graph.node_data = g.node_data;
   graph.edge_data = g.edge_data;
-  graph.copy_to_gpu(ctx->gg);
+  graph.copy_to_gpu_async(ctx->gg, stream);
 
   size_t max_shared_size = 0; // for union across master/mirror of all hosts
   ctx->master.num_nodes =
@@ -112,8 +115,8 @@ void load_graph_CUDA_common(struct CUDA_Context_Common* ctx, MarshalGraph& g,
   for (uint32_t h = 0; h < num_hosts; ++h) {
     if (ctx->master.num_nodes[h] > 0) {
       ctx->master.nodes[h].alloc(ctx->master.num_nodes[h]);
-      ctx->master.nodes[h].copy_to_gpu(g.master_nodes[h],
-                                       ctx->master.num_nodes[h]);
+      ctx->master.nodes[h].copy_to_gpu_async(g.master_nodes[h],
+					     ctx->master.num_nodes[h], stream);
     }
     if (ctx->master.num_nodes[h] > max_shared_size) {
       max_shared_size = ctx->master.num_nodes[h];
@@ -128,8 +131,8 @@ void load_graph_CUDA_common(struct CUDA_Context_Common* ctx, MarshalGraph& g,
   for (uint32_t h = 0; h < num_hosts; ++h) {
     if (ctx->mirror.num_nodes[h] > 0) {
       ctx->mirror.nodes[h].alloc(ctx->mirror.num_nodes[h]);
-      ctx->mirror.nodes[h].copy_to_gpu(g.mirror_nodes[h],
-                                       ctx->mirror.num_nodes[h]);
+      ctx->mirror.nodes[h].copy_to_gpu_async(g.mirror_nodes[h],
+					     ctx->mirror.num_nodes[h], stream);
     }
     if (ctx->mirror.num_nodes[h] > max_shared_size) {
       max_shared_size = ctx->mirror.num_nodes[h];
@@ -138,6 +141,8 @@ void load_graph_CUDA_common(struct CUDA_Context_Common* ctx, MarshalGraph& g,
   ctx->offsets.alloc(max_shared_size);
   ctx->is_updated.alloc(1);
   ctx->is_updated.cpu_wr_ptr()->alloc(max_shared_size);
+  check_cuda(cudaStreamSynchronize(stream));
+  check_cuda(cudaStreamDestroy(stream));
   // printf("[%u] load_graph_GPU: %u owned nodes of total %u resident, %lu
   // edges\n", ctx->id, ctx->nowned, graph.nnodes, graph.nedges);
 }

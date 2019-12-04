@@ -93,8 +93,7 @@ struct Worklist {
 
 #ifdef COUNT_ATOMICS
       CUDA_SAFE_CALL(cudaMallocManaged((void**)&atomic_counter, sizeof(int) * 1));
-      CUDA_SAFE_CALL(cudaMemcpy((void*)atomic_counter, &zero, 1 * sizeof(zero),
-                                cudaMemcpyHostToDevice));
+      memcpy((void*)atomic_counter, &zero, 1 * sizeof(zero));
 #endif
 
 #ifdef ATOMIC_DENSITY
@@ -148,26 +147,21 @@ struct Worklist {
     currslot     = 0;
     dindex       = &dcounters[currslot];
 
-    CUDA_SAFE_CALL(cudaMemcpy((void*)dcounters, &index, 2 * sizeof(nsize),
-                              cudaMemcpyHostToDevice));
+    memcpy((void*)dcounters, &index, 2 * sizeof(nsize));
 #else
-    CUDA_SAFE_CALL(cudaMemcpy((void*)dindex, &nsize, 1 * sizeof(nsize),
-                              cudaMemcpyHostToDevice));
+    memcpy((void*)dindex, &nsize, 1 * sizeof(nsize));
 #endif
-    CUDA_SAFE_CALL(
-        cudaMemcpy(dwl, wl, nsize * sizeof(int), cudaMemcpyHostToDevice));
+    memcpy(dwl, wl, nsize * sizeof(int));
   }
 
   void update_cpu() {
     int nsize = nitems();
-    CUDA_SAFE_CALL(
-        cudaMemcpy(wl, dwl, nsize * sizeof(int), cudaMemcpyDeviceToHost));
+    memcpy(wl, dwl, nsize * sizeof(int));
   }
 
   void display_items() {
     int nsize = nitems();
-    CUDA_SAFE_CALL(
-        cudaMemcpy(wl, dwl, nsize * sizeof(int), cudaMemcpyDeviceToHost));
+    memcpy(wl, dwl, nsize * sizeof(int));
 
     printf("WL: ");
     for (int i = 0; i < nsize; i++)
@@ -213,8 +207,7 @@ struct Worklist {
 
     TRACE of  = trace_open(n, "r");
     int nsize = instr_read_array_gpu(n, of, sizeof(wl[0]), length, dwl, wl);
-    CUDA_SAFE_CALL(cudaMemcpy((void*)dindex, &nsize, 1 * sizeof(nsize),
-                              cudaMemcpyHostToDevice));
+    memcpy((void*)dindex, &nsize, 1 * sizeof(nsize));
     trace_close(of);
     return;
   }
@@ -258,8 +251,7 @@ struct Worklist {
 #else
     // if(f_will_write)
 
-    CUDA_SAFE_CALL(cudaMemcpy(&index, (void*)dindex, 1 * sizeof(index),
-                              cudaMemcpyDeviceToHost));
+    memcpy(&index, (void*)dindex, 1 * sizeof(index));
 
     // f_will_write = 0;
     return index;
@@ -704,8 +696,7 @@ static __device__ __host__ int get_atomic_count(Worklist wl) {
   return *wl.atomic_counter;
 #else
   int count = 0;
-  CUDA_SAFE_CALL(cudaMemcpy(&count, wl.atomic_counter, sizeof(int) * 1,
-                            cudaMemcpyDeviceToHost));
+  memcpy(&count, wl.atomic_counter, sizeof(int) * 1);
   return count;
 #endif
 }
@@ -718,9 +709,7 @@ static __device__ __host__ void print_atomic_density(const char* name,
   assert(false);
 #else
   unsigned count[32 + 1];
-  CUDA_SAFE_CALL(cudaMemcpy(&count, wl.atomic_density,
-                            sizeof(unsigned int) * (32 + 1),
-                            cudaMemcpyDeviceToHost));
+  memcpy(&count, wl.atomic_density, sizeof(unsigned int) * (32 + 1));
 
   for (int i = 0; i < 32 + 1; i++) {
     fprintf(stderr, "INSTR atomic_density_%s_%d %u\n", name, i, count[i]);

@@ -36,8 +36,7 @@ struct AppendOnlyList {
       list.alloc(nsize);
       dl = list.gpu_wr_ptr();
       CUDA_SAFE_CALL(cudaMallocManaged((void**)&dindex, 1 * sizeof(int)));
-      CUDA_SAFE_CALL(cudaMemcpy((void*)dindex, &zero, 1 * sizeof(zero),
-                                cudaMemcpyHostToDevice));
+      memcpy(dindex, &zero, sizeof(zero));
       index = 0;
     }
   }
@@ -61,16 +60,14 @@ struct AppendOnlyList {
   }
 
   void reset() {
-    CUDA_SAFE_CALL(cudaMemcpy((void*)dindex, &zero, 1 * sizeof(zero),
-                              cudaMemcpyHostToDevice));
+    memcpy(dindex, &zero, sizeof(zero));
   }
 
   __device__ __host__ int nitems() {
 #ifdef __CUDA_ARCH__
     return *dindex;
 #else
-    CUDA_SAFE_CALL(cudaMemcpy(&index, (void*)dindex, 1 * sizeof(index),
-                              cudaMemcpyDeviceToHost));
+    memcpy(&index, dindex, sizeof(zero));
     return index;
 #endif
   }
@@ -206,8 +203,7 @@ struct AppendOnlyList {
     int nsize =
         instr_read_array(n, of, sizeof(int), size, list.cpu_wr_ptr(true));
     list.gpu_rd_ptr();
-    check_cuda(cudaMemcpy((void*)dindex, &nsize, 1 * sizeof(nsize),
-                          cudaMemcpyHostToDevice));
+    memcpy(dindex, &nsize, sizeof(nsize));
     trace_close(of);
     return;
   }

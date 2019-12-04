@@ -83,8 +83,7 @@ struct PipeContextT {
 
   __host__ void restore() {
     struct oi_save local;
-    check_cuda(cudaMemcpy(&local, ois, sizeof(struct oi_save),
-                          cudaMemcpyDeviceToHost));
+    memcpy(&local, ois, sizeof(struct oi_save));
 
     in  = local.in;
     out = local.out;

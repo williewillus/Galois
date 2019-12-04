@@ -48,8 +48,7 @@ void ComponentSpace::dump_to_file(const char* F) {
     mem = (unsigned*)calloc(nelements, sizeof(unsigned));
   }
 
-  assert(cudaMemcpy(mem, ele2comp, nelements * sizeof(unsigned),
-                    cudaMemcpyDeviceToHost) == cudaSuccess);
+  memcpy(mem, ele2comp, nelements * sizeof(unsigned));
 
   int i;
   for (i = 0; i < nelements; i++) {
@@ -64,12 +63,9 @@ void ComponentSpace::dump_to_file(const char* F) {
 }
 
 void ComponentSpace::copy(ComponentSpace& two) {
-  assert(cudaMemcpy(two.ncomponents, ncomponents, sizeof(unsigned),
-                    cudaMemcpyDeviceToDevice) == 0);
-  assert(cudaMemcpy(two.ele2comp, ele2comp, sizeof(unsigned) * nelements,
-                    cudaMemcpyDeviceToDevice) == 0);
-  assert(cudaMemcpy(two.complen, complen, sizeof(unsigned) * nelements,
-                    cudaMemcpyDeviceToDevice) == 0);
+  memcpy(two.ncomponents, ncomponents, sizeof(unsigned));
+  memcpy(two.ele2comp, ele2comp, sizeof(unsigned) * nelements);
+  memcpy(two.complen, complen, sizeof(unsigned) * nelements);
 }
 __device__ void ComponentSpace::print1x1() {
   printf("\t\t-----------------\n");
@@ -86,8 +82,7 @@ __device__ unsigned ComponentSpace::numberOfComponents() {
 }
 unsigned ComponentSpace::numberOfComponentsHost() {
   unsigned hncomponents = 0;
-  check_cuda(cudaMemcpy(&hncomponents, ncomponents, sizeof(unsigned),
-                        cudaMemcpyDeviceToHost));
+  memcpy(&hncomponents, ncomponents, sizeof(unsigned));
   return hncomponents;
 }
 void ComponentSpace::allocate() {
@@ -110,8 +105,7 @@ void ComponentSpace::init() {
   unsigned nblocks   = (nelements + blocksize - 1) / blocksize;
   dinitcs<<<nblocks, blocksize>>>(nelements, complen, ele2comp);
   // init number of components.
-  check_cuda(cudaMemcpy(ncomponents, &nelements, sizeof(unsigned),
-                        cudaMemcpyHostToDevice));
+  memcpy(ncomponents, &nelements, sizeof(unsigned));
 }
 __device__ bool ComponentSpace::isBoss(unsigned element) {
   return atomicCAS(&ele2comp[element], element, element) == element;

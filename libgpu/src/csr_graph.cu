@@ -69,11 +69,11 @@ void CSRGraphTex::copy_to_gpu(struct CSRGraphTex &copygraph) {
   
   assert(copygraph.allocOnDevice(edge_data == NULL));
 
-  check_cuda(cudaMemcpy(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type), cudaMemcpyHostToDevice));
-  if (edge_data != NULL) check_cuda(cudaMemcpy(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type), cudaMemcpyHostToDevice));
-  check_cuda(cudaMemcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyHostToDevice));
+  memcpy(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type));
+  if (edge_data != NULL) memcpy(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type));
+  memcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type));
 
-  check_cuda(cudaMemcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyHostToDevice));
+  memcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type));
 }
 
 unsigned CSRGraphTex::allocOnDevice(bool no_edge_data) {
@@ -254,11 +254,11 @@ void CSRGraph::copy_to_gpu(struct CSRGraph &copygraph) {
   
   assert(copygraph.allocOnDevice(edge_data == NULL));
 
-  check_cuda(cudaMemcpy(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type), cudaMemcpyHostToDevice));
-  if (edge_data != NULL) check_cuda(cudaMemcpy(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type), cudaMemcpyHostToDevice));
-  check_cuda(cudaMemcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyHostToDevice));
+  memcpy(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type));
+  if (edge_data != NULL) memcpy(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type));
+  memcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type));
 
-  check_cuda(cudaMemcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyHostToDevice));
+  memcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type));
 }
 
 void CSRGraph::copy_to_cpu(struct CSRGraph &copygraph) {
@@ -268,11 +268,11 @@ void CSRGraph::copy_to_cpu(struct CSRGraph &copygraph) {
   assert(copygraph.nnodes = nnodes);
   assert(copygraph.nedges = nedges);
   
-  check_cuda(cudaMemcpy(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type), cudaMemcpyDeviceToHost));
-  if (edge_data != NULL) check_cuda(cudaMemcpy(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type), cudaMemcpyDeviceToHost));
-  check_cuda(cudaMemcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type), cudaMemcpyDeviceToHost));
+  memcpy(copygraph.edge_dst, edge_dst, nedges * sizeof(index_type));
+  if (edge_data != NULL) memcpy(copygraph.edge_data, edge_data, nedges * sizeof(edge_data_type));
+  memcpy(copygraph.node_data, node_data, nnodes * sizeof(node_data_type));
 
-  check_cuda(cudaMemcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type), cudaMemcpyDeviceToHost));
+  memcpy(copygraph.row_start, row_start, (nnodes+1) * sizeof(index_type));
 }
 
 struct EdgeIterator {

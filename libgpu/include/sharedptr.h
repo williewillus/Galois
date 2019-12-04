@@ -183,14 +183,11 @@ public:
     assert(ptrs[dst]);
 
     if (isCPU[dst] && !isCPU[src]) {
-      CUDA_SAFE_CALL(cudaMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T),
-                                cudaMemcpyDeviceToHost));
+      memcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T));
     } else if (!isCPU[dst] && !isCPU[src]) {
-      CUDA_SAFE_CALL(cudaMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T),
-                                cudaMemcpyDeviceToDevice));
+      memcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T));
     } else if (!isCPU[dst] && isCPU[src]) {
-      CUDA_SAFE_CALL(cudaMemcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T),
-                                cudaMemcpyHostToDevice));
+      memcpy(ptrs[dst], ptrs[src], nmemb * sizeof(T));
     } else
       abort(); // cpu-to-cpu not implemented
   }

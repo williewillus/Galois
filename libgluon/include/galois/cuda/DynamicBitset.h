@@ -41,12 +41,14 @@ class DynamicBitset {
   size_t num_bits_capacity;
   size_t num_bits;
   uint64_t* bit_vector;
+  bool managed;
 
 public:
   DynamicBitset() {
     num_bits_capacity = 0;
     num_bits          = 0;
     bit_vector        = NULL;
+    managed           = false;
   }
 
   DynamicBitset(size_t nbits) { alloc(nbits); }
@@ -64,6 +66,7 @@ public:
     num_bits          = nbits;
     if(vec_size() != 0) {
         CUDA_SAFE_CALL(cudaMallocManaged((void**)&bit_vector, vec_size() * sizeof(uint64_t)));
+        managed = true;
     } else {
         CUDA_SAFE_CALL(cudaMalloc((void**)&bit_vector, vec_size() * sizeof(uint64_t)));
     }
@@ -121,16 +124,24 @@ public:
 
   void copy_to_cpu(uint64_t* bit_vector_cpu_copy) {
     assert(bit_vector_cpu_copy != NULL);
-    CUDA_SAFE_CALL(cudaMemcpy(bit_vector_cpu_copy, bit_vector,
+    if(managed) {
+        memcpy(bit_vector_cpu_copy, bit_vector, vec_size() * sizeof(uint64_t));
+    } else {
+        CUDA_SAFE_CALL(cudaMemcpy(bit_vector_cpu_copy, bit_vector,
                               vec_size() * sizeof(uint64_t),
                               cudaMemcpyDeviceToHost));
+    }
   }
 
   void copy_to_gpu(uint64_t* cpu_bit_vector) {
     assert(cpu_bit_vector != NULL);
-    CUDA_SAFE_CALL(cudaMemcpy(bit_vector, cpu_bit_vector,
+    if(managed) {
+        memcpy(bit_vector, cpu_bit_vector, vec_size() * sizeof(uint64_t));
+    } else {
+        CUDA_SAFE_CALL(cudaMemcpy(bit_vector, cpu_bit_vector,
                               vec_size() * sizeof(uint64_t),
                               cudaMemcpyHostToDevice));
+    }
   }
 };
 
